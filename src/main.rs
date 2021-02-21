@@ -2,22 +2,33 @@ use std::io;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 
-fn main() -> io::Result<()> {
-    let mut args: Vec<String> = std::env::args().collect();
-    args.pop();
-    let port = if args.is_empty() || args[0].is_empty() {
+fn get_port_number(args: &mut Vec<String>) -> u32 {
+    if args.is_empty() {
         println!("defaulting to port: 8000");
         8000
     } else {
-        match args[1].to_string().parse::<u32>() {
+        let port = match args[0].to_string().parse::<u32>() {
             Ok(p) => p,
             Err(_msg) => {
                 println!("invalid port number. defaulting to 8000");
                 8000
             }
-        }
-    };
+        };
+        args.remove(0);
+        port
+    }
+}
+
+fn main() -> io::Result<()> {
+    let mut args: Vec<String> = std::env::args().collect();
+    args.remove(0);
+    let mut port = 8000;
+    if !args.is_empty() {
+        port = get_port_number(&mut args);
+    }
+
     let mut writer = TcpStream::connect(format!("localhost:{}", port))?;
+    println!("connected to server at port: {}", port);
     let mut reader = writer.try_clone()?;
 
     loop {
